@@ -1,2 +1,58 @@
-# skills
-WorkBuddy skills collection
+# Skills
+
+> 面向 AI Agent（WorkBuddy / Claude Code / OpenClaw 等）的技能集合，按领域分类，即取即用。
+
+每个技能是一个独立目录，包含一份 `SKILL.md`（含 frontmatter 元数据与完整工作流程）及所需脚本。所有技能均不包含任何账号、密钥或令牌，凭据一律通过环境变量传入。
+
+## 技能索引
+
+### 🎓 教育类（education/）
+
+| 技能 | 版本 | 说明 |
+|------|------|------|
+| [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.0.0 | 超星智雅（StudyAI）MCP 一键接入：本机回调授权换 JWT、自动写入 mcp.json、refresh_token 常驻保活，附 7 类故障速查表 |
+
+## 目录结构
+
+```
+skills/
+├── README.md
+├── LICENSE
+└── education/                  # 教育类技能
+    └── chaoxing-mcp-oauth/     # 超星智雅 MCP 一键接入
+        ├── SKILL.md
+        └── scripts/
+            ├── chaoxing-mcp-lab.mjs      # OAuth2 授权实验台（获取/刷新令牌）
+            └── chaoxing-mcp-refresh.mjs  # 令牌保活守护（自动刷新 JWT）
+```
+
+## 安装使用
+
+### 方式一：技能市场
+
+- **SkillHub**：搜索「超星智雅 MCP 一键接入」或 `chaoxing-mcp-oauth`
+- **ClawHub**：`@erich1566/chaoxing-mcp-oauth`
+
+### 方式二：手动安装
+
+```bash
+# 克隆仓库到本地
+git clone https://github.com/Erich1566/skills.git
+
+# 将技能目录复制/链接到 Agent 的技能目录
+# WorkBuddy: ~/.workbuddy/skills/
+cp -r skills/education/chaoxing-mcp-oauth ~/.workbuddy/skills/
+```
+
+## 贡献新技能
+
+欢迎按以下规范提交技能：
+
+1. 在对应分类目录（如 `education/`）下创建 `<skill-name>/` 目录，命名用 kebab-case
+2. 必须包含 `SKILL.md`，frontmatter 需含 `name`、`slug`、`version`、`displayName`、`summary`、`license`
+3. 脚本放 `scripts/` 子目录；**严禁硬编码任何凭据**（client_id / secret / token / 账号），凭据只走环境变量
+4. 提交前请自查文件中不含个人凭据信息
+
+## License
+
+[MIT](LICENSE)
