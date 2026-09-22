@@ -6,6 +6,12 @@
 
 ## 技能索引
 
+### 🎨 创意类（creative/）
+
+| 技能 | 版本 | 说明 |
+|------|------|------|
+| [poetry-folk-adaptation](creative/poetry-folk-adaptation/) | 1.0.0 | 古诗词新民谣改编：将古典诗词改编成成名曲水准的现代新民谣——完整歌词、曲风卡与 AI 音乐 Prompt，承五家笔法，支持单曲/专辑企划 |
+
 ### 🎓 教育类（education/）
 
 | 技能 | 版本 | 说明 |
@@ -18,8 +24,15 @@
 skills/
 ├── README.md
 ├── LICENSE
-└── education/                  # 教育类技能
-    └── chaoxing-mcp-oauth/     # 超星智雅 MCP 一键接入
+├── creative/                       # 创意类技能
+│   └── poetry-folk-adaptation/     # 古诗词新民谣改编
+│       ├── SKILL.md
+│       └── references/
+│           ├── lyric-craft.md      # 填词技艺：五家笔法、钩子技法、语言美学
+│           ├── music-style.md      # 新民谣曲风库与 AI 音乐 prompt 写法
+│           └── exemplars.md        # 典范作品全文与逐段拆解
+└── education/                      # 教育类技能
+    └── chaoxing-mcp-oauth/         # 超星智雅 MCP 一键接入
         ├── SKILL.md
         └── scripts/
             ├── chaoxing-mcp-lab.mjs      # OAuth2 授权实验台（获取/刷新令牌）
@@ -30,8 +43,8 @@ skills/
 
 ### 方式一：技能市场
 
-- **SkillHub**：搜索「超星智雅 MCP 一键接入」或 `chaoxing-mcp-oauth`
-- **ClawHub**：`@erich1566/chaoxing-mcp-oauth`
+- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`
+- **ClawHub**：搜索 `poetry-folk-adaptation`（显示名「古诗词新民谣改编」）
 
 ### 方式二：手动安装
 
@@ -41,6 +54,7 @@ git clone https://github.com/Erich1566/skills.git
 
 # 将技能目录复制/链接到 Agent 的技能目录
 # WorkBuddy: ~/.workbuddy/skills/
+cp -r skills/creative/poetry-folk-adaptation ~/.workbuddy/skills/
 cp -r skills/education/chaoxing-mcp-oauth ~/.workbuddy/skills/
 ```
 
