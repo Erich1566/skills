@@ -16,7 +16,7 @@
 
 | 技能 | 版本 | 说明 |
 |------|------|------|
-| [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.0.0 | 超星智雅（StudyAI）MCP 一键接入：本机回调授权换 JWT、自动写入 mcp.json、refresh_token 常驻保活，附 7 类故障速查表 |
+| [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
 
 ## 目录结构
 
@@ -34,17 +34,19 @@ skills/
 └── education/                      # 教育类技能
     └── chaoxing-mcp-oauth/         # 超星智雅 MCP 一键接入
         ├── SKILL.md
+        ├── skill-card.md           # ClawHub 发布卡片
         └── scripts/
-            ├── chaoxing-mcp-lab.mjs      # OAuth2 授权实验台（获取/刷新令牌）
-            └── chaoxing-mcp-refresh.mjs  # 令牌保活守护（自动刷新 JWT）
+            ├── chaoxing-mcp-auto.mjs    # ⚡ 一键接入：检查令牌→自动刷新→失败自动授权→写配置→验证
+            ├── chaoxing-mcp-lab.mjs     # scope 探测实验台（网页粘贴密钥+自动验证）
+            └── chaoxing-mcp-refresh.mjs # 独立刷新脚本（单次/常驻）
 ```
 
 ## 安装使用
 
 ### 方式一：技能市场
 
-- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`
-- **ClawHub**：搜索 `poetry-folk-adaptation`（显示名「古诗词新民谣改编」）
+- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`；`chaoxing-mcp-oauth`
+- **ClawHub**：搜索 `poetry-folk-adaptation`、`chaoxing-mcp-oauth`
 
 ### 方式二：手动安装
 
@@ -56,6 +58,19 @@ git clone https://github.com/Erich1566/skills.git
 # WorkBuddy: ~/.workbuddy/skills/
 cp -r skills/creative/poetry-folk-adaptation ~/.workbuddy/skills/
 cp -r skills/education/chaoxing-mcp-oauth ~/.workbuddy/skills/
+```
+
+### chaoxing-mcp-oauth 快速上手
+
+```bash
+# 【仅首次】设置工作台：浏览器自动弹出，按页面引导填凭据 → 自动授权 → 自动验证
+node ~/.workbuddy/skills/chaoxing-mcp-oauth/scripts/chaoxing-mcp-auto.mjs --setup
+
+# 【日常】一键确保连接：令牌有效→跳过；过期→自动刷新；失效→自动弹授权页
+node ~/.workbuddy/skills/chaoxing-mcp-oauth/scripts/chaoxing-mcp-auto.mjs
+
+# 【系统级保活】Windows 计划任务每 15 分钟无人值守刷新（只要电脑开着，令牌永不过期）
+# 任务名：ChaoxingMCP-KeepAlive
 ```
 
 ## 贡献新技能
