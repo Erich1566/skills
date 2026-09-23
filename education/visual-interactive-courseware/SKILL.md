@@ -5,7 +5,7 @@ title: 可视化交互课件
 displayName: 可视化交互课件
 summary: 把教材知识点做成单文件 HTML 可视化交互课件——应用级外壳 + 电影感质感 + 滑块实时仿真，覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明。
 description: 可视化交互课件制作技能。当用户需要为课堂教学制作可视化、可交互的课件（HTML 单文件）时使用。触发场景：把教材知识点（如血液循环、四羊方尊、晨昏线、二分二至等）做成 SVG 演示 + 可交互的网页课件、知识卡和教师说明。适用学科：生物、历史、地理、物理、化学、数学等一切含结构、流程、现象的知识点。
-version: 1.0.0
+version: 1.1.0
 tags: ["education", "courseware", "svg", "interactive", "teaching", "physics", "biology"]
 license: MIT
 metadata: {"clawdbot":{"emoji":"🎓","os":["linux","darwin","win32"]}}

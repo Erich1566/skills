@@ -17,7 +17,7 @@
 | 技能 | 版本 | 说明 |
 |------|------|------|
 | [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
-| [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.0.0 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
+| [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.1.0 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
 
 ## 目录结构
 

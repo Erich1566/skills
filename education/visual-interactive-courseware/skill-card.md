@@ -52,7 +52,11 @@ Mitigation: 优先使用 Chrome/Edge 最新版；课件已做单文件零外链�
 
 ## Skill Version(s):
 
-1.0.0 (source: artifact frontmatter)
+1.1.0 (source: artifact frontmatter)
+
+### Changelog
+
+- 1.1.0：新增画布漫游引擎（拖动平移/滚轮缩放/双击复位）与全局镜头联动（知识点/环节/模式切换自动推近）；透明热区标配可见锚点标记；沉淀三大交互冲突处理模式（拖动误触、双击复位 vs 单击、播放状态同步）；回归清单统一为 14 项；审核脚本兼容 SVG `<image>` 无障碍检查
 
 ## Ethical Considerations:
 
