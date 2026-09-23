@@ -17,6 +17,7 @@
 | 技能 | 版本 | 说明 |
 |------|------|------|
 | [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
+| [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.0.0 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
 
 ## 目录结构
 
@@ -32,21 +33,33 @@ skills/
 │           ├── music-style.md      # 新民谣曲风库与 AI 音乐 prompt 写法
 │           └── exemplars.md        # 典范作品全文与逐段拆解
 └── education/                      # 教育类技能
-    └── chaoxing-mcp-oauth/         # 超星智雅 MCP 一键接入
+    ├── chaoxing-mcp-oauth/         # 超星智雅 MCP 一键接入
+    │   ├── SKILL.md
+    │   ├── skill-card.md           # ClawHub 发布卡片
+    │   └── scripts/
+    │       ├── chaoxing-mcp-auto.mjs    # ⚡ 一键接入：检查令牌→自动刷新→失败自动授权→写配置→验证
+    │       ├── chaoxing-mcp-lab.mjs     # scope 探测实验台（网页粘贴密钥+自动验证）
+    │       └── chaoxing-mcp-refresh.mjs # 独立刷新脚本（单次/常驻）
+    └── visual-interactive-courseware/ # 可视化交互课件
         ├── SKILL.md
         ├── skill-card.md           # ClawHub 发布卡片
+        ├── assets/
+        │   └── template.html       # 单文件交互课件 HTML 骨架
+        ├── references/
+        │   ├── design-guide.md      # 设计指南（画布漫游/镜头联动/四区外壳）
+        │   ├── audience-matrix.md   # 学段×学科适配矩阵
+        │   ├── subject-examples.md  # 学科拆解模式库
+        │   └── workflow.md          # 工作流（含教师说明结构）
         └── scripts/
-            ├── chaoxing-mcp-auto.mjs    # ⚡ 一键接入：检查令牌→自动刷新→失败自动授权→写配置→验证
-            ├── chaoxing-mcp-lab.mjs     # scope 探测实验台（网页粘贴密钥+自动验证）
-            └── chaoxing-mcp-refresh.mjs # 独立刷新脚本（单次/常驻）
+            └── audit_courseware.py  # 自动审核（10 项检查，≥90 分可交付）
 ```
 
 ## 安装使用
 
 ### 方式一：技能市场
 
-- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`；`chaoxing-mcp-oauth`
-- **ClawHub**：搜索 `poetry-folk-adaptation`、`chaoxing-mcp-oauth`
+- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`；`chaoxing-mcp-oauth`；`visual-interactive-courseware`
+- **ClawHub**：搜索 `poetry-folk-adaptation`、`chaoxing-mcp-oauth`、`visual-interactive-courseware`
 
 ### 方式二：手动安装
 
