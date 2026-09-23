@@ -198,9 +198,11 @@ async function cycle(reason) {
 
   if (ONCE) return;
 
+  // 修复：unref() 的 setInterval 会让 Node 事件循环为空而自动退出。
+  // 改为可 ref 的 interval（保持常驻）；兜底每 5 分钟检查状态文件是否缺失。
   const MIN5 = 5 * 60 * 1000;
   const HOUR = 55 * 60 * 1000; // 55 分钟刷一次（令牌寿命 60 分钟）
-  setInterval(() => cycle('定时'), HOUR).unref();
-  setInterval(() => cycle('兜底'), MIN5).unref();
-  console.log('\n常驻模式：每 55 分钟刷新一次（兜底每 5 分钟检查状态文件是否缺失）。');
+  setInterval(() => cycle('定时'), HOUR);
+  setInterval(() => cycle('兜底'), MIN5);
+  console.log('\n常驻模式：每 55 分钟刷新一次（兜底每 5 分钟检查状态文件是否缺失）。按 Ctrl+C 退出。');
 })();

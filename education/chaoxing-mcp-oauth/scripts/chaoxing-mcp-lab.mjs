@@ -26,6 +26,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const argv0 = process.argv.slice(2);
 const argOf = (name) => {
@@ -43,14 +44,14 @@ const CFG = {
   serverDesc: '超星智雅 StudyAI（OAuth2 授权码 + 静态 Bearer）',
 };
 
-if (!CFG.clientId || !CFG.clientSecret) {
+if (!CFG.clientId) {
   console.error(
-    '❌ 缺少凭据。请用环境变量 CX_CLIENT_ID / CX_CLIENT_SECRET 传入，' +
-      '或加 --client-id <id> --client-secret <secret>。\n' +
+    '❌ 缺少 client_id。请用环境变量 CX_CLIENT_ID 传入，或加 --client-id <id>。\n' +
       '   （凭据来源：智雅平台 个人工作台 → 权限管理 → 第三方授权管理 → 密钥管理）'
   );
   process.exit(1);
 }
+// client_secret 允许缺失：可在实验台页面粘贴录入（仅存进程内存，不写入任何文件）
 
 const MCP_CONFIG = path.join(os.homedir(), '.workbuddy', 'mcp.json');
 const PORT = Number(process.env.CX_PORT || 8765);
@@ -62,6 +63,7 @@ const KNOWN_BAD = new Set(['all', 'studyai']);
 /** 官方文档确认：scope = 建密钥时「选择接口」对应的数据范围技术标识（多为三段式，如 <域>:<资源>:<动作>）
  *  完整值以智雅凭证页「数据范围（Scope）」一栏为准 —— 优先用页面里的自由输入框填原文 */
 const SCOPE_CANDIDATES = [
+  'statistic:studyai:read topic:resource:read:test',
   'statistic:studyai:read',
   'openid',
 ];
@@ -105,7 +107,19 @@ function page(title, body) {
 </style></head><body>${body}</body></html>`;
 }
 
-function labPage() {
+function labPage(badSecret = false) {
+  if (!CFG.clientSecret) {
+    return page(
+      '超星智雅 MCP 授权 — 第一步',
+      `<h1>第一步：粘贴 client_secret</h1>
+       <div class="sub">client_id 已就绪：<code>${esc(CFG.clientId)}</code>。secret 只保存在本进程内存中，不写入任何文件、不进日志。</div>
+       <div class="warn">粘贴后点保存 —— 会自动验证密钥，正确就直接跳到学习通授权页。</div>
+       <form action="/secret" method="post">
+         <input type="password" name="secret" placeholder="粘贴 client_secret" autocomplete="off" style="width:420px">
+         <button type="submit">保存并自动验证</button>
+       </form>`
+    );
+  }
   const cells = SCOPE_CANDIDATES.map((s) => {
     const hit = attempts.filter((a) => a.scope === s).pop();
     const cls = hit ? (hit.code ? 'ok' : 'bad') : '';
@@ -123,10 +137,20 @@ function labPage() {
 
   return page(
     '超星智雅 scope 探测实验台',
-    `<h1>超星智雅 scope 探测实验台</h1>
-     <div class="sub">上一轮已经定位到：<b>加上 scope 后报错从 <code>client_id</code> 变成 <code>invalid_scope</code></b>，说明真正的拦路石是 scope 取值。下面把它们一个个点开即可（浏览器已登录学习通，不用重复登录）。</div>
+    `${badSecret ? '<div class="warn">❌ 上一次粘贴的密钥验证未通过（invalid_client）。请回智雅重新复制 client_secret —— 建议直接「重置密钥」拿全新的，复制后确认无断行再贴。</div>' : ''}
+     <h1>超星智雅 MCP 授权实验台</h1>
+     <div class="sub">密钥已就绪（长度 ${CFG.clientSecret.length}，已通过/待验证）。下面按钮任选其一走授权；推荐点第一个。</div>
 
      <div class="warn">官方文档已确认（3.3 节）：<b>scope 就是你在智雅「新建密钥 → 选择接口」时所选接口的技术标识</b>，格式形如 <code>user:read</code>、<code>course:read</code>，<b>并且完整显示在智雅凭证页面的「数据范围（Scope）」一栏</b>。优先去凭证页抄那一栏的值填进下面的自由输入框，命中率最高。</div>
+
+     <h2>第一步：粘贴 client_secret（已录入过则无需重复）</h2>
+     <form action="/secret" method="post" style="display:flex;gap:8px;align-items:center">
+       <input type="password" name="secret" placeholder="粘贴 client_secret" autocomplete="off" style="width:360px">
+       <button type="submit">保存</button>
+     </form>
+     <form action="/verify-secret" method="get" style="margin-top:6px">
+       <button type="submit" style="background:#2ea043">🔍 验证密钥（不消耗授权）</button>
+     </form>
 
      <h2>常见取值（点一下就走一次授权，逐个点）</h2>
      <ul class="grid">${cells}</ul>
@@ -280,8 +304,62 @@ async function handleSuccess(code) {
   if (r.status === 403 && /scope_denied/i.test(r.text)) {
     say('\n⚠️ scope_denied：这个 JWT 的 scope 不含 MCP 端点要求的范围（例如只有 openid）。');
     say('   请换用智雅凭证页「数据范围(Scope)」一栏的完整值重新授权，成功后配置会自动覆盖更新。');
+    return log.join('\n');
+  }
+  // 连通成功后自动拉起保活守护（凭据通过环境变量传递，不落盘）
+  if (r.status === 200 && CFG.clientSecret) {
+    try {
+      const refreshScript = path.join(path.dirname(fileURLToPath(import.meta.url)), 'chaoxing-mcp-refresh.mjs');
+      const child = spawn(
+        process.execPath,
+        [refreshScript],
+        {
+          env: { ...process.env, CX_CLIENT_ID: CFG.clientId, CX_CLIENT_SECRET: CFG.clientSecret },
+          detached: true,
+          stdio: 'ignore',
+        }
+      );
+      child.unref();
+      say('\n✅ 保活守护已在后台启动（每 55 分钟用 refresh_token 刷新，会话期间有效）。');
+      say('   若新会话中 MCP 报 401/403，重跑一次刷新脚本 --once 即可恢复。');
+    } catch (e) {
+      say(`\n⚠️ 保活守护启动失败（${e.message}），可稍后手动运行 refresh 脚本。`);
+    }
   }
   return log.join('\n');
+}
+
+/** 假 code 诊断：不消耗真授权，判定密钥对错。
+ *  invalid_grant = 密钥正确（code 假是预期）；invalid_client = 密钥错误 */
+async function fakeCodeTest() {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: CFG.clientId,
+    client_secret: CFG.clientSecret,
+    code: 'fake-code-diagnostic-do-not-use',
+    redirect_uri: REDIRECT_URI,
+  });
+  const res = await fetch(CFG.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  const text = await res.text();
+  let err = '';
+  try {
+    err = JSON.parse(text).error || '';
+  } catch {
+    err = text.slice(0, 120);
+  }
+  if (err === 'invalid_grant') return { ok: true, msg: '✅ 密钥正确（invalid_grant：code 是假的属预期，说明 client_id + client_secret 这一对已被平台认可）。现在点上面的授权按钮即可一次通过。' };
+  if (err === 'invalid_client') return { ok: false, msg: `❌ 密钥错误（invalid_client）。粘贴的 secret 与平台登记的不一致 —— 请在智雅「密钥管理」重新复制（或重置密钥后再复制），注意别漏字符。` };
+  return { ok: false, msg: `⚠️ 未预期的响应：HTTP ${res.status} ${err}` };
+}
+
+/** 清洗粘贴内容：去除零宽字符/不可见字符，仅保留可打印 ASCII */
+function sanitizeSecret(s) {
+  // eslint-disable-next-line no-control-regex
+  return String(s).replace(/[^\x21-\x7E]/g, '');
 }
 
 const server = http.createServer(async (req, res) => {
@@ -292,9 +370,53 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  // 网页录入 secret：POST /secret（仅存进程内存）→ 自动验证 → 通过则自动跳授权
+  if (u.pathname === '/secret' && req.method === 'POST') {
+    let raw = '';
+    req.on('data', (c) => {
+      raw += c;
+      if (raw.length > 10_000) req.destroy();
+    });
+    req.on('end', async () => {
+      const val = sanitizeSecret(new URLSearchParams(raw).get('secret') || '');
+      if (val) {
+        CFG.clientSecret = val;
+        console.log(`>>> client_secret 已更新（仅内存，长度 ${val.length}，已清洗不可见字符）`);
+      }
+      if (!CFG.clientSecret) {
+        res.writeHead(302, { Location: '/lab' });
+        return res.end();
+      }
+      // 自动验证密钥（假 code 诊断，不消耗授权）
+      const v = await fakeCodeTest();
+      console.log(`>>> 自动验证密钥：${v.ok ? '✅ 通过，自动进入授权' : '❌ 失败，留在录入页'}`);
+      res.writeHead(302, { Location: v.ok ? '/try?scope=' + encodeURIComponent(SCOPE_CANDIDATES[0]) : '/lab?badsecret=1' });
+      res.end();
+    });
+    return;
+  }
+
+  // 假 code 诊断：验证密钥对错（不消耗授权）
+  if (u.pathname === '/verify-secret') {
+    if (!CFG.clientSecret) {
+      res.writeHead(302, { Location: '/lab' });
+      return res.end();
+    }
+    const r = await fakeCodeTest();
+    console.log(`>>> 密钥诊断：${r.ok ? '通过' : '失败'}`);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(
+      page(
+        '密钥诊断结果',
+        `<h1>${r.ok ? '密钥 OK' : '密钥有问题'}</h1><div class="sub" style="font-size:15px">${esc(r.msg)}</div>
+         <p><a href="/lab">← 返回实验台</a></p>`
+      )
+    );
+  }
+
   if (u.pathname === '/lab') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    return res.end(labPage());
+    return res.end(labPage(u.searchParams.get('badsecret') === '1'));
   }
 
   if (u.pathname === '/') {
@@ -305,7 +427,8 @@ const server = http.createServer(async (req, res) => {
   if (u.pathname === '/try' || u.pathname === '/try-noscope') {
     const noCope = u.pathname === '/try-noscope';
     const raw = u.searchParams.get('scope');
-    const scope = noCope ? null : raw === '' ? '' : raw;
+    // 修剪首尾空白：从凭证页复制常带空格/换行，会导致 invalid_scope
+    const scope = noCope ? null : raw === '' ? '' : raw?.trim();
     const target = authUrl(scope === undefined ? '' : scope);
     console.log(`\n>>> 试 scope = ${scope === null ? '(不带)' : '[' + scope + ']'}`);
     res.writeHead(302, { Location: target });
@@ -351,6 +474,7 @@ server.listen(PORT, '127.0.0.1', () => {
   const lab = `http://localhost:${PORT}/lab`;
   console.log(`\n=== scope 探测实验台已启动 ===\n请在浏览器打开：${lab}\n`);
   console.log(`回调地址：${REDIRECT_URI}（本机监听 127.0.0.1:${PORT}）`);
-  console.log(`候选 scope 共 ${SCOPE_CANDIDATES.length} 个；已排除已知无效：${[...KNOWN_BAD].join(', ')}\n`);
+  console.log(`候选 scope 共 ${SCOPE_CANDIDATES.length} 个；已排除已知无效：${[...KNOWN_BAD].join(', ')}`);
+  console.log(`client_secret：${CFG.clientSecret ? '已通过环境变量/参数提供' : '未提供 —— 打开页面按提示粘贴（仅存内存）'}\n`);
   openBrowser(lab);
 });
