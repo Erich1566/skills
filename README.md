@@ -17,6 +17,7 @@
 | 技能 | 版本 | 说明 |
 |------|------|------|
 | [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
+| [knowledge-card-generator](education/knowledge-card-generator/) | 2.0.0 | Mo卡片风格知识卡片生成器：单文件 HTML 卡片集（米色背景+白卡+大引号+游戏化），支持章节导航（数据驱动 chapterStart+暖橙进度条）、进度条点击跳卡、动态总数渲染、fitCard 智能缩放单屏完整、ImageGen 配图工作流与 node 交付校验，源自 40 卡 AI 通识课实战 |
 | [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.1.0 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
 
 ## 目录结构
@@ -40,6 +41,11 @@ skills/
     │       ├── chaoxing-mcp-auto.mjs    # ⚡ 一键接入：检查令牌→自动刷新→失败自动授权→写配置→验证
     │       ├── chaoxing-mcp-lab.mjs     # scope 探测实验台（网页粘贴密钥+自动验证）
     │       └── chaoxing-mcp-refresh.mjs # 独立刷新脚本（单次/常驻）
+    ├── knowledge-card-generator/   # Mo卡片风格知识卡片生成器
+    │   ├── SKILL.md
+    │   └── assets/
+    │       ├── mo_card_template.html # 卡片集 HTML 骨架（章节导航/点击跳卡/fitCard 内置）
+    │       └── smoke_test.js         # 模板冒烟测试（10 项断言）
     └── visual-interactive-courseware/ # 可视化交互课件
         ├── SKILL.md
         ├── skill-card.md           # ClawHub 发布卡片
@@ -58,8 +64,8 @@ skills/
 
 ### 方式一：技能市场
 
-- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`；`chaoxing-mcp-oauth`；`visual-interactive-courseware`
-- **ClawHub**：搜索 `poetry-folk-adaptation`、`chaoxing-mcp-oauth`、`visual-interactive-courseware`
+- **SkillHub**：搜索「古诗词新民谣改编」或 `poetry-folk-adaptation`；`chaoxing-mcp-oauth`；`knowledge-card-generator`；`visual-interactive-courseware`
+- **ClawHub**：搜索 `poetry-folk-adaptation`、`chaoxing-mcp-oauth`、`knowledge-card-generator`、`visual-interactive-courseware`
 
 ### 方式二：手动安装
 

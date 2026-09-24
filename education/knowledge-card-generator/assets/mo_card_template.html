@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>{{DECK_TITLE}} · 知识卡片</title>
+<style>
+  :root {
+    --accent: {{ACCENT_COLOR}};
+    --accent-soft: {{ACCENT_SOFT}};
+    --warm: #E8A23D;
+    --warm-soft: #F2DDB5;
+    --ink: #3B3B3B;
+    --ink-soft: #6B6B6B;
+    --paper: #FFFFFF;
+    --bg: #FDF9F3;
+    --radius: 20px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 12px;
+  }
+  .topbar .back {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid #E8E2D6;
+    background: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; color: var(--ink);
+    flex-shrink: 0;
+  }
+  .deck-title {
+    font-size: 16px; font-weight: 600; color: var(--ink);
+    flex: 1; text-align: center;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding: 0 12px;
+  }
+  .topbar .share {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid #E8E2D6;
+    background: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ink);
+    flex-shrink: 0;
+  }
+  .topbar .share svg { width: 17px; height: 17px; }
+
+  /* ===== 进度区 ===== */
+  .progress-zone {
+    width: 100%;
+    max-width: 560px;
+    padding: 4px 18px 10px;
+  }
+  .progress-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .progress-meta .count b { color: var(--accent); font-weight: 600; }
+  .streak {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #FFF3E0;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #B26A00;
+  }
+  .progress-track {
+    display: flex; gap: 6px;
+    height: 5px;
+  }
+  .progress-track .seg {
+    flex: 1;
+    background: #EFE9DC;
+    border-radius: 999px;
+    transition: background .3s;
+    cursor: pointer;
+  }
+  .progress-track .seg.done { background: var(--accent); }
+  /* 章首卡分段：暖橙色区分，方便定位章节 */
+  .progress-track .seg.chapter { background: var(--warm-soft); }
+  .progress-track .seg.chapter.done { background: var(--warm); }
+
+  /* ===== 卡片舞台 ===== */
+  .stage {
+    flex: 1;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: stretch;
+    padding: 6px 18px calc(env(safe-area-inset-bottom, 0px) + 12px);
+    min-height: 0;
+  }
+  .card {
+    flex: 1;
+    background: var(--paper);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 24px rgba(80, 60, 20, 0.06);
+    padding: 26px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  /* 引号装饰 */
+  .quote-mark {
+    position: absolute;
+    top: 18px; left: 20px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent-soft);
+    pointer-events: none;
+    user-select: none;
+  }
+  .card-inner {
+    position: relative;
+    margin-top: 26px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    transform-origin: top left;
+  }
+  .card-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 14px;
+    color: #2E2E2E;
+  }
+  .card-body {
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+  .card-body p + p { margin-top: 12px; }
+  .card-body b, .card-body strong { color: var(--accent); font-weight: 600; }
+  .card-body em { font-style: normal; background: linear-gradient(transparent 65%, var(--accent-soft) 65%); padding: 0 1px; }
+
+  /* 卡片内插图区 */
+  .card-figure {
+    margin-top: 16px;
+    border-radius: 14px;
+    background: #FBF7EF;
+    padding: 10px;
+    text-align: center;
+  }
+  .card-figure img {
+    max-width: 100%;
+    max-height: 190px;
+    width: auto;
+    border-radius: 10px;
+  }
+  .card-figure figcaption {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+
+  /* 卡片内插图区 */
+  .card-figure img {
+    max-width: 100%;
+    max-height: 190px;
+    width: auto;
+    border-radius: 10px;
+  }
+  .card-figure figcaption {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+
+  /* 列表 */
+  .card-list { margin-top: 14px; }
+  .card-list li {
+    list-style: none;
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  .card-list li::before {
+    content: "";
+    position: absolute;
+    left: 2px; top: 10px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* 知识点结构化块 */
+  .knowledge-block {
+    margin-top: 18px;
+    border-left: 3px solid var(--accent);
+    background: #FDFAF4;
+    border-radius: 0 12px 12px 0;
+    padding: 12px 14px;
+  }
+  .knowledge-block .kb-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .knowledge-block .kb-text { font-size: 14.5px; line-height: 1.75; color: var(--ink); }
+
+  /* ===== 底部导航 ===== */
+  .nav {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 18px calc(env(safe-area-inset-bottom, 0px) + 18px);
+  }
+  .nav button {
+    flex: 1;
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform .12s, opacity .2s;
+  }
+  .nav button:active { transform: scale(.97); }
+  .btn-prev {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid #E8E2D6 !important;
+  }
+  .btn-next {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-next:disabled { opacity: .45; cursor: default; }
+
+  /* 翻卡动画 */
+  .card-anim { animation: cardIn .34s cubic-bezier(.22,.9,.34,1); }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px) scale(.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* 完成态 */
+  .finish-panel { display: none; }
+  .finish-panel.show { display: flex; }
+  .finish-panel {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    padding: 40px 24px;
+  }
+  .finish-panel .medal { font-size: 52px; line-height: 1; }
+  .finish-panel h2 { font-size: 22px; color: #2E2E2E; margin-bottom: 2px; }
+  .finish-panel p { color: var(--ink-soft); font-size: 14px; }
+
+  /* ===== PC 端优化：宽屏左右布局 ===== */
+  @media (min-width: 820px) {
+    body { padding: 28px 40px; }
+    .topbar, .progress-zone, .stage, .nav { max-width: 880px; }
+    .card { padding: 44px 52px 40px; }
+    .card-title { font-size: 26px; }
+    .card-body { font-size: 17px; }
+    .nav { padding-bottom: 8px; }
+    .nav button { flex: 0 0 160px; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <button class="back" aria-label="返回">←</button>
+    <div class="deck-title">{{DECK_TITLE}}</div>
+    <button class="share" aria-label="分享">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    </button>
+  </header>
+
+  <section class="progress-zone">
+    <div class="progress-meta">
+      <span class="count"><b id="cur">1</b> / <span id="total">{{TOTAL}}</span></span>
+      <span class="streak">🔥 连续学习 <span id="streakDays">{{STREAK_DAYS}}</span> 天</span>
+    </div>
+    <div class="progress-track" id="progressTrack"></div>
+  </section>
+
+  <main class="stage">
+    <article class="card" id="cardBox">
+      <span class="quote-mark">&ldquo;</span>
+      <div class="card-inner" id="cardInner"><!-- JS 渲染 --></div>
+    </article>
+  </main>
+
+  <nav class="nav">
+    <button class="btn-prev" id="prevBtn">上一张</button>
+    <button class="btn-next" id="nextBtn">下一张</button>
+  </nav>
+
+<script>
+/* ============ 卡片数据 ============ */
+const DECK_TITLE = "{{DECK_TITLE}}";
+const STREAK_DAYS = {{STREAK_DAYS}};
+const CARDS = {{CARDS_JSON}};
+
+/* ============ 状态 ============ */
+let idx = 0;
+const total = CARDS.length;
+
+/* ============ 元素 ============ */
+const cardBox   = document.getElementById('cardBox');
+const cardInner = document.getElementById('cardInner');
+const curEl     = document.getElementById('cur');
+const totalEl   = document.getElementById('total');
+const trackEl   = document.getElementById('progressTrack');
+const prevBtn   = document.getElementById('prevBtn');
+const nextBtn   = document.getElementById('nextBtn');
+
+/* ============ 初始化进度条 ============ */
+/* 数据驱动：chapterStart 标记写在卡片 JSON 里，章首段自动变暖橙色；
+   全条可点击跳卡，悬停显示卡名 */
+function buildTrack() {
+  trackEl.innerHTML = '';
+  CARDS.forEach((c, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    if (c.chapterStart) seg.classList.add('chapter');
+    seg.title = c.title; /* 悬停提示卡名 */
+    seg.addEventListener('click', () => { idx = i; render(); });
+    trackEl.appendChild(seg);
+  });
+}
+
+/* ============ 渲染卡片 ============ */
+function render() {
+  const c = CARDS[idx];
+
+  let html = '';
+  if (c.tag) html += `<span class="card-tag">${c.tag}</span>`;
+  html += `<h1 class="card-title">${c.title}</h1>`;
+  (c.paragraphs || []).forEach(p => { html += `<div class="card-body"><p>${p}</p></div>`; });
+  (c.points || []).forEach(pt => {
+    html += `<div class="knowledge-block"><div class="kb-label">${pt.label || '要点'}</div><div class="kb-text">${pt.text}</div></div>`;
+  });
+  if (c.list) {
+    html += '<ul class="card-list">';
+    c.list.forEach(item => { html += `<li>${item}</li>`; });
+    html += '</ul>';
+  }
+  if (c.image) {
+    html += `<figure class="card-figure"><img src="${c.image}" alt="${c.title}" loading="lazy"><figcaption>${c.imageCaption || ''}</figcaption></figure>`;
+  }
+  if (c.quote) {
+    html += `<div class="knowledge-block" style="margin-top:20px"><div class="kb-label">一句话记忆</div><div class="kb-text">${c.quote}</div></div>`;
+  }
+
+  cardInner.innerHTML = html;
+
+  /* 智能缩放：内容超出卡片时等比缩小，保证完整显示不裁切不滚动 */
+  fitCard();
+
+  curEl.textContent = idx + 1;
+  totalEl.textContent = total; /* 总数从 CARDS.length 派生，永不手工同步 */
+  document.querySelectorAll('#progressTrack .seg').forEach((seg, i) => {
+    seg.classList.toggle('done', i <= idx);
+  });
+
+  prevBtn.disabled = (idx === 0);
+  prevBtn.style.opacity = idx === 0 ? .45 : 1;
+
+  nextBtn.textContent = idx === total - 1 ? '完成' : '下一张';
+
+  cardBox.classList.remove('card-anim');
+  void cardBox.offsetWidth;
+  cardBox.classList.add('card-anim');
+
+  document.querySelector('.card').scrollTop = 0;
+}
+
+/* ============ 智能缩放 ============ */
+function fitCard() {
+  cardInner.style.transform = 'none';
+  cardInner.style.width = 'auto';
+  const cs = getComputedStyle(cardBox);
+  const availH = cardBox.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const availW = cardBox.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  let scale = 1;
+  if (cardInner.scrollHeight > availH || cardInner.scrollWidth > availW) {
+    scale = Math.min(availH / cardInner.scrollHeight, availW / cardInner.scrollWidth, 1);
+  }
+  cardInner.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+  cardInner.style.width = availW + 'px';
+}
+window.addEventListener('resize', () => { if (CARDS[idx]) fitCard(); });
+
+/* ============ 翻页 ============ */
+function next() {
+  if (idx < total - 1) { idx++; render(); }
+  else { showFinish(); }
+}
+function prev() {
+  if (idx > 0) { idx--; render(); }
+}
+
+function showFinish() {
+  const segs = document.querySelectorAll('#progressTrack .seg');
+  segs.forEach(s => s.classList.add('done'));
+  cardBox.classList.remove('card-anim');
+  void cardBox.offsetWidth;
+  cardBox.classList.add('card-anim');
+  cardInner.innerHTML = `
+    <div class="finish-panel show">
+      <div class="medal">🏅</div>
+      <h2>太棒了，学完了！</h2>
+      <p>《${DECK_TITLE}》共 ${total} 张卡片已全部掌握</p>
+      <p style="margin-top:6px">🔥 已连续学习 ${STREAK_DAYS} 天，明天继续加油</p>
+      <button class="btn-next" style="margin-top:18px;width:180px" onclick="location.reload()">再学一遍</button>
+    </div>`;
+  nextBtn.disabled = true;
+  nextBtn.style.opacity = .45;
+}
+
+/* ============ 事件 ============ */
+nextBtn.addEventListener('click', next);
+prevBtn.addEventListener('click', prev);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') next();
+  if (e.key === 'ArrowLeft') prev();
+});
+
+/* 触摸滑动 */
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (dx < -50) next();
+  if (dx > 50) prev();
+}, { passive: true });
+
+/* ============ 启动 ============ */
+buildTrack();
+render();
+</script>
+</body>
+</html>
