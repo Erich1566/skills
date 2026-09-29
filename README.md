@@ -18,7 +18,7 @@
 |------|------|------|
 | [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
 | [knowledge-card-generator](education/knowledge-card-generator/) | 2.0.0 | Mo卡片风格知识卡片生成器：单文件 HTML 卡片集（米色背景+白卡+大引号+游戏化），支持章节导航（数据驱动 chapterStart+暖橙进度条）、进度条点击跳卡、动态总数渲染、fitCard 智能缩放单屏完整、ImageGen 配图工作流与 node 交付校验，源自 40 卡 AI 通识课实战 |
-| [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.1.0 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
+| [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.2.2 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），支持 3D 增强通道（Blender 建模→GLB 交互幕/仿真视频，three.js 构建期静态打包零 fetch），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
 
 ## 目录结构
 
@@ -52,12 +52,14 @@ skills/
         ├── assets/
         │   └── template.html       # 单文件交互课件 HTML 骨架
         ├── references/
+        │   ├── 3d-blender-pipeline.md # 3D 增强通道完整管线（含 12 坑清单）
         │   ├── design-guide.md      # 设计指南（画布漫游/镜头联动/四区外壳）
         │   ├── audience-matrix.md   # 学段×学科适配矩阵
         │   ├── subject-examples.md  # 学科拆解模式库
         │   └── workflow.md          # 工作流（含教师说明结构）
         └── scripts/
-            └── audit_courseware.py  # 自动审核（10 项检查，≥90 分可交付）
+            ├── audit_courseware.py  # 自动审核（10 项检查，≥90 分可交付）
+            └── bundle_3d.py         # three.js 静态打包（沙箱/file:// 零 fetch，v1.2.2 新增）
 ```
 
 ## 安装使用
@@ -91,6 +93,11 @@ node ~/.workbuddy/skills/chaoxing-mcp-oauth/scripts/chaoxing-mcp-auto.mjs
 # 【系统级保活】Windows 计划任务每 15 分钟无人值守刷新（只要电脑开着，令牌永不过期）
 # 任务名：ChaoxingMCP-KeepAlive
 ```
+
+### visual-interactive-courseware v1.2.2 更新要点
+
+- **3D 通道加载架构根修**：废弃 Blob URL 动态 `import()`（沙箱 iframe / file:// 环境拦截报 `Failed to fetch`），改为构建期静态打包——`scripts/bundle_3d.py` 把 three.js + OrbitControls + BufferGeometryUtils + GLTFLoader 打成单 IIFE（`window.ThreeBundle`），运行时零 fetch；GLB 用 `GLTFLoader.parse(ArrayBuffer)` 直载
+- **新增 3D 实测坑清单 #11/#12**：three r155+ 物理光照下 EEVEE 导出材质欠亮（灯光加强 + ACES toneMapping + emissive 提轮廓）；`svg.viewBox.baseVal` 在部分 Chromium 环境恒读 0（漫游引擎改 getAttribute/setAttribute）
 
 ## 贡献新技能
 
