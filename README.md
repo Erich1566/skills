@@ -19,6 +19,7 @@
 | [chaoxing-mcp-oauth](education/chaoxing-mcp-oauth/) | 1.3.0 | 超星智雅（StudyAI）MCP 一键接入：`--setup` 设置工作台（假 code 预校验密钥）、一条命令自动刷新/授权/写配置、`--daemon-once` 计划任务无人值守保活，附 7 类故障速查表 |
 | [knowledge-card-generator](education/knowledge-card-generator/) | 2.0.0 | Mo卡片风格知识卡片生成器：单文件 HTML 卡片集（米色背景+白卡+大引号+游戏化），支持章节导航（数据驱动 chapterStart+暖橙进度条）、进度条点击跳卡、动态总数渲染、fitCard 智能缩放单屏完整、ImageGen 配图工作流与 node 交付校验，源自 40 卡 AI 通识课实战 |
 | [visual-interactive-courseware](education/visual-interactive-courseware/) | 1.2.2 | 可视化交互课件：把教材知识点做成单文件 HTML 交互课件（应用级外壳+滑块实时仿真+电影感质感+画布漫游/镜头联动），支持 3D 增强通道（Blender 建模→GLB 交互幕/仿真视频，three.js 构建期静态打包零 fetch），覆盖生物/历史/地理/物理等多学科，含自动审核脚本与教师说明 |
+| [sim3d-webgl-training](education/sim3d-webgl-training/) | 2.0.0 | 3D虚拟仿真实训系统生成器：零依赖单文件 WebGL2 PBR 渲染（双画布+GGX+ACES）+ 6 类程序化 CAD 曲面 + 3D 关节技师 + 四维教学闭环（结构拆解/原理仿真/SOP 工卡/排故考核）；v2.0 起 SIM_CONFIG 数据驱动架构（部件规格/可测电气值/工卡分值/故障盲考/工况/相机/限位单源配置）+ 虚拟仪器矩阵（万用表 4 模式/示波器/能力雷达）+ 遥测条，内置内容密度审核脚本 |
 
 ## 目录结构
 
@@ -46,6 +47,18 @@ skills/
     │   └── assets/
     │       ├── mo_card_template.html # 卡片集 HTML 骨架（章节导航/点击跳卡/fitCard 内置）
     │       └── smoke_test.js         # 模板冒烟测试（10 项断言）
+    ├── sim3d-webgl-training/         # 3D虚拟仿真实训系统生成器
+    │   ├── SKILL.md                   # 触发条件 + 七步法工作流 + 内容密度红线
+    │   ├── skill-card.md              # ClawHub 发布卡片
+    │   ├── references/
+    │   │   ├── domain-data.md         # ★ SIM_CONFIG 数据契约全量模板 + IRB 6700 真实数据范例
+    │   │   ├── core-engine.md         # 双画布骨架 + Mat4 + PBR 着色器 + 主循环 + 音效
+    │   │   ├── cad-library.md         # MeshBuilder + 6 类 CAD 曲面 + 3D 关节技师
+    │   │   ├── rendering-rules.md     # 双通道渲染 + 粒子 + 引线标注 + 质感细节清单
+    │   │   ├── teaching-modes.md      # 教学闭环 + SOP 校验 + 仪器矩阵 + 遥测条
+    │   │   └── gotchas.md             # 弱模型防呆清单 + 交付 checklist
+    │   └── scripts/
+    │       └── audit_sim3d.py         # 静态审核脚本（引擎必需项 + 内容密度基线）
     └── visual-interactive-courseware/ # 可视化交互课件
         ├── SKILL.md
         ├── skill-card.md           # ClawHub 发布卡片
